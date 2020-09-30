@@ -3,111 +3,74 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Document
+    public enum Relationship
     {
+        Parent, Child, Sibling
     }
 
-    public interface IMachine
+    public class Person
     {
-        void Print(Document document);
-        void Scan(Document document);
-        void Fax(Document document);
+        public string Name;
     }
 
-    public class MultiFunctionPrinter : IMachine
+    public interface IRelationshipBrowser
     {
-        public void Fax(Document document)
-        {
-            //
-        }
-
-        public void Print(Document document)
-        {
-            //
-        }
-
-        public void Scan(Document document)
-        {
-            //
-        }
+        IEnumerable<Person> FindAllChildrenOf(string name);
     }
 
-    public class OldFashionedPrinter : IMachine
+    #region low-level
+    public class Relationships : IRelationshipBrowser
     {
-        public void Fax(Document document)
+        private List<(Person, Relationship, Person)> _relations = new List<(Person, Relationship, Person)>();
+
+        public void AddParentAndChild(Person parent, Person child)
         {
-            //
+            _relations.Add((parent, Relationship.Parent, child));
+            _relations.Add((child, Relationship.Child, parent));
         }
 
-        public void Print(Document document)
-        {
-            throw new NotImplementedException();
-        }
+        // public List<(Person, Relationship, Person)> Relations => relations;
 
-        public void Scan(Document document)
+        public IEnumerable<Person> FindAllChildrenOf(string name)
         {
-            throw new NotImplementedException();
+            foreach (var relation in _relations.Where(r => r.Item1.Name == name && r.Item2 == Relationship.Parent))
+                yield return relation.Item3;
         }
     }
+    #endregion
 
-    public interface IPrinter
+    public class Research
     {
-        void Print(Document document);
-    }
+        // public Research(Relationships relationships)
+        // {
+        //     var relations = relationships.Relations;
+        //     foreach (var relation in relations.Where(r => r.Item1.Name == "Ali" && r.Item2 == Relationship.Parent))
+        //         WriteLine($"Ali has a child called {relation.Item3.Name}");
 
-    public interface IScanner
-    {
-        void Scan(Document document);
-    }
+        // }
 
-    public class Photocopier : IPrinter, IScanner
-    {
-        public void Print(Document document)
+        public Research(IRelationshipBrowser browser)
         {
-            throw new NotImplementedException();
+            foreach (var child in browser.FindAllChildrenOf("Ali"))
+                WriteLine($"Ali has a child called {child.Name}");
         }
 
-        public void Scan(Document document)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public interface IMultiFunctionDevice : IScanner, IPrinter
-    {
-    }
-
-    public class MultiFunctionMachine : IMultiFunctionDevice
-    {
-        private IPrinter _printer;
-        private IScanner _scanner;
-
-        public MultiFunctionMachine(IPrinter printer, IScanner scanner)
-        {
-            _printer = printer;
-            _scanner = scanner;
-        }
-
-        public void Print(Document document)
-        {
-            _printer.Print(document);
-        }
-
-        public void Scan(Document document)
-        {
-            // decorator
-            _scanner.Scan(document);
-        }
-    }
-
-    public class Program
-    {
         static void Main(string[] args)
         {
+            var parent = new Person { Name = "Ali" };
+            var child = new Person { Name = "Veli" };
+            var child2 = new Person { Name = "Ayşe" };
+
+            var relationships = new Relationships();
+            relationships.AddParentAndChild(parent, child);
+            relationships.AddParentAndChild(parent, child2);
+
+            new Research(relationships);
         }
     }
 }
