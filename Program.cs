@@ -7,141 +7,54 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public enum Name
+    public class Rectangle
     {
-        Red, Green, Blue
-    }
+        public virtual int Width { get; set; }
+        public virtual int Height { get; set; }
 
-    public enum Size
-    {
-        Small, Medium, Large, Huge
-    }
-
-    public class Product
-    {
-        public string Name { get; set; }
-        public Color Color { get; set; }
-        public Size Size { get; set; }
-
-        public Product(string name, Color color, Size size)
+        public Rectangle()
         {
-            if (name == null)
-                throw new ArgumentNullException(paramName: nameof(name));
+        }
 
-            Name = name;
-            Color = color;
-            Size = size;
+        public Rectangle(int width, int height)
+        {
+            Width = width;
+            Height = height;
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Width)}: {Width}, {nameof(Height)}: {Height}";
         }
     }
 
-    public class ProductFilter
+    public class Square : Rectangle
     {
-        public static IEnumerable<Product> FilterBySize(IEnumerable<Product> products, Size size)
+        // new keyword hides base.Width
+        // public new int Width
+        public override int Width
         {
-            foreach (var product in products)
-                if (product.Size == size)
-                    yield return product;
-        }
-        public static IEnumerable<Product> FilterByColor(IEnumerable<Product> products, Color color)
-        {
-            foreach (var product in products)
-                if (product.Color == color)
-                    yield return product;
-        }
-    }
-
-    public interface ISpecification<T>
-    {
-        bool IsSatisfied(T t);
-    }
-
-    public interface IFilter<T>
-    {
-        IEnumerable<T> Filter(IEnumerable<T> items, ISpecification<T> spec);
-    }
-
-    public class ColorSpecification : ISpecification<Product>
-    {
-        private Color _color;
-
-        public ColorSpecification(Color color)
-        {
-            _color = color;
+            set { base.Width = base.Height = value; }
         }
 
-        public bool IsSatisfied(Product product)
+        public override int Height
         {
-            return product.Color == _color;
-        }
-    }
-    public class SizeSpecification : ISpecification<Product>
-    {
-        private Size _size;
-
-        public SizeSpecification(Size size)
-        {
-            _size = size;
-        }
-
-        public bool IsSatisfied(Product product)
-        {
-            return product.Size == _size;
-        }
-    }
-
-    public class AndSpecification<T> : ISpecification<T>
-    {
-        private ISpecification<T> _first, _second;
-
-        public AndSpecification(ISpecification<T> first, ISpecification<T> second)
-        {
-            _first = first;
-            _second = second;
-        }
-
-        public bool IsSatisfied(T t)
-        {
-            return _first.IsSatisfied(t) && _second.IsSatisfied(t);
-        }
-    }
-
-    public class BetterFilter : IFilter<Product>
-    {
-        public IEnumerable<Product> Filter(IEnumerable<Product> items, ISpecification<Product> spec)
-        {
-            foreach (var product in items)
-                if (spec.IsSatisfied(product))
-                    yield return product;
+            set { base.Width = base.Height = value; }
         }
     }
 
     public class Program
     {
+        public static int Area(Rectangle rectangle) => rectangle.Width * rectangle.Height;
+
         static void Main(string[] args)
         {
-            var apple = new Product("Apple", Color.Green, Size.Small);
-            var tree = new Product("Tree", Color.Green, Size.Large);
-            var house = new Product("House", Color.Blue, Size.Large);
+            var rectangle = new Rectangle(2, 3);
+            WriteLine($"{rectangle} has area {Area(rectangle)}");
 
-            Product[] products = { apple, tree, house };
-
-            WriteLine("Green products (old): ");
-            foreach (var product in ProductFilter.FilterByColor(products, Color.Green))
-                WriteLine($" - {product.Name} is green");
-
-            var betterFilter = new BetterFilter();
-            WriteLine("Green products (new): ");
-            foreach (var product in betterFilter.Filter(products, new ColorSpecification(Color.Green)))
-                WriteLine($" - {product.Name} is green");
-
-            WriteLine("Large blue items: ");
-            foreach (var product in betterFilter.Filter(
-                products,
-                new AndSpecification<Product>(
-                    new ColorSpecification(Color.Blue),
-                    new SizeSpecification(Size.Large))
-                ))
-                WriteLine($" - {product.Name} is large an blue");
+            Rectangle square = new Square();
+            square.Width = 4;
+            WriteLine($"{square} has area {Area(square)}");
         }
     }
 }
