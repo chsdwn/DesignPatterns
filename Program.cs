@@ -7,54 +7,107 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Rectangle
+    public class Document
     {
-        public virtual int Width { get; set; }
-        public virtual int Height { get; set; }
+    }
 
-        public Rectangle()
+    public interface IMachine
+    {
+        void Print(Document document);
+        void Scan(Document document);
+        void Fax(Document document);
+    }
+
+    public class MultiFunctionPrinter : IMachine
+    {
+        public void Fax(Document document)
         {
+            //
         }
 
-        public Rectangle(int width, int height)
+        public void Print(Document document)
         {
-            Width = width;
-            Height = height;
+            //
         }
 
-        public override string ToString()
+        public void Scan(Document document)
         {
-            return $"{nameof(Width)}: {Width}, {nameof(Height)}: {Height}";
+            //
         }
     }
 
-    public class Square : Rectangle
+    public class OldFashionedPrinter : IMachine
     {
-        // new keyword hides base.Width
-        // public new int Width
-        public override int Width
+        public void Fax(Document document)
         {
-            set { base.Width = base.Height = value; }
+            //
         }
 
-        public override int Height
+        public void Print(Document document)
         {
-            set { base.Width = base.Height = value; }
+            throw new NotImplementedException();
+        }
+
+        public void Scan(Document document)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public interface IPrinter
+    {
+        void Print(Document document);
+    }
+
+    public interface IScanner
+    {
+        void Scan(Document document);
+    }
+
+    public class Photocopier : IPrinter, IScanner
+    {
+        public void Print(Document document)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Scan(Document document)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public interface IMultiFunctionDevice : IScanner, IPrinter
+    {
+    }
+
+    public class MultiFunctionMachine : IMultiFunctionDevice
+    {
+        private IPrinter _printer;
+        private IScanner _scanner;
+
+        public MultiFunctionMachine(IPrinter printer, IScanner scanner)
+        {
+            _printer = printer;
+            _scanner = scanner;
+        }
+
+        public void Print(Document document)
+        {
+            _printer.Print(document);
+        }
+
+        public void Scan(Document document)
+        {
+            // decorator
+            _scanner.Scan(document);
         }
     }
 
     public class Program
     {
-        public static int Area(Rectangle rectangle) => rectangle.Width * rectangle.Height;
-
         static void Main(string[] args)
         {
-            var rectangle = new Rectangle(2, 3);
-            WriteLine($"{rectangle} has area {Area(rectangle)}");
-
-            Rectangle square = new Square();
-            square.Width = 4;
-            WriteLine($"{square} has area {Area(square)}");
         }
     }
 }
