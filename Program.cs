@@ -9,91 +9,48 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public interface IHotDrink
+    public class Person : ICloneable
     {
-        void Consume();
-    }
+        public string[] Names;
+        public Address Address;
 
-    internal class Tea : IHotDrink
-    {
-        public void Consume()
+        public Person(string[] names, Address address)
         {
-            WriteLine("Nice tea");
+            Names = names;
+            Address = address;
+        }
+
+        public object Clone()
+        {
+            // shallow copy
+            return new Person(Names, Address.Clone() as Address);
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Names)}: {string.Join(", ", Names)}, {nameof(Address)}: {Address}";
         }
     }
 
-    internal class Coffee : IHotDrink
+    public class Address
     {
-        public void Consume()
+        public string StreetName;
+        public int HouseNumber;
+
+        public Address(string streetName, int houseNumber)
         {
-            WriteLine("Nice coffee");
-        }
-    }
-
-    public interface IHotDrinkFactory
-    {
-        IHotDrink Prepare(int amount);
-    }
-
-    internal class TeaFactory : IHotDrinkFactory
-    {
-        public IHotDrink Prepare(int amount)
-        {
-            WriteLine($"Ready {amount} ml cup of tea");
-            return new Tea();
-        }
-    }
-
-    internal class CoffeeFactory : IHotDrinkFactory
-    {
-        public IHotDrink Prepare(int amount)
-        {
-            WriteLine($"Ready {amount} ml cup of coffee");
-            return new Coffee();
-        }
-    }
-
-    public class HotDrinkMachine
-    {
-        private List<Tuple<string, IHotDrinkFactory>> _factories =
-            new List<Tuple<string, IHotDrinkFactory>>();
-
-        public HotDrinkMachine()
-        {
-            foreach (var t in typeof(HotDrinkMachine).Assembly.GetTypes())
-            {
-                // checks if t implements IHotDrinkFactory and not an interface
-                if (typeof(IHotDrinkFactory).IsAssignableFrom(t) && !t.IsInterface)
-                    _factories.Add(Tuple.Create(
-                        t.Name.Replace("Factory", string.Empty),
-                        Activator.CreateInstance(t) as IHotDrinkFactory
-                    ));
-            }
+            StreetName = streetName;
+            HouseNumber = houseNumber;
         }
 
-        public IHotDrink MakeDrink()
+        public object Clone()
         {
-            WriteLine("Available drinks: ");
-            for (int index = 0; index < _factories.Count; index++)
-            {
-                var tuple = _factories[index];
-                WriteLine($"{index}: {tuple.Item1}");
-            }
+            return new Address(StreetName, HouseNumber);
+        }
 
-            Write("Select drink: ");
-            for (; ; )
-            {
-                string s;
-                if ((s = ReadLine()) != null && int.TryParse(s, out int i) && i >= 0 && i < _factories.Count)
-                {
-                    Write("Specify amount: ");
-                    s = ReadLine();
-                    if (s != null && int.TryParse(s, out int amount) && amount > 0)
-                        return _factories[i].Item2.Prepare(amount);
-                }
-
-                WriteLine("Incorrect input, try again");
-            }
+        public override string ToString()
+        {
+            return $"{nameof(StreetName)}: {StreetName}, {nameof(HouseNumber)}: {HouseNumber}";
         }
     }
 
@@ -101,9 +58,12 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            var machine = new HotDrinkMachine();
-            var drink = machine.MakeDrink();
-            drink.Consume();
+            var ali = new Person(new[] { "Ali", "Veli" }, new Address("A Street", 100));
+            var ayse = ali.Clone() as Person;
+            ayse.Names[0] = "Ayse";
+
+            WriteLine(ali);
+            WriteLine(ayse);
         }
     }
 }
