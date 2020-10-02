@@ -19,38 +19,35 @@ namespace DesignPatterns
     {
         private double _x, _y;
 
-        /// <summary>
-        /// Initializes a point from EITHER cartesian or polar
-        /// </summary>
-        /// <param name="a">x if cartesian, rho if polar</param>
-        /// <param name="b"></param>
-        /// <param name="coordinateSystem"></param>
-        public Point(double a, double b, CoordinateSystem coordinateSystem = CoordinateSystem.Cartesian)
+        private Point(double x, double y)
         {
-            switch (coordinateSystem)
-            {
-                case CoordinateSystem.Cartesian:
-                    _x = a;
-                    _y = b;
-                    break;
-                case CoordinateSystem.Polar:
-                    _x = a * Math.Cos(b);
-                    _y = a * Math.Sin(b);
-                    break;
-            }
+            _x = x;
+            _y = y;
         }
 
-        // public Point(double rho, double theta)
-        // {
-        //     _x = rho;
-        //     _y = theta;
-        // }
+        // factory method
+        public static Point NewCarteshianPoint(double x, double y)
+        {
+            return new Point(x, y);
+        }
+
+        public static Point NewPolarPoint(double rho, double theta)
+        {
+            return new Point(rho * Math.Cos(theta), rho * Math.Sin(theta));
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(_x)}: {_x}, {nameof(_y)} {_y}";
+        }
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
+            var point = Point.NewPolarPoint(1.0, Math.PI / 2);
+            WriteLine(point);
         }
     }
 }
