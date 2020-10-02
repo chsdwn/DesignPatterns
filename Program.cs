@@ -9,35 +9,74 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Point
+    public interface IHotDrink
     {
-        // public static Point Origin => new Point(0, 0);
-        public static Point Origin = new Point(0, 0); // better
+        void Consume();
+    }
 
-        private double _x, _y;
-
-        private Point(double x, double y)
+    internal class Tea : IHotDrink
+    {
+        public void Consume()
         {
-            _x = x;
-            _y = y;
+            WriteLine("Nice tea");
+        }
+    }
+
+    internal class Coffee : IHotDrink
+    {
+        public void Consume()
+        {
+            WriteLine("Nice coffee");
+        }
+    }
+
+    public interface IHotDrinkFactory
+    {
+        IHotDrink Prepare(int amount);
+    }
+
+    internal class TeaFactory : IHotDrinkFactory
+    {
+        public IHotDrink Prepare(int amount)
+        {
+            WriteLine($"Ready {amount} ml cup of tea");
+            return new Tea();
+        }
+    }
+
+    internal class CoffeeFactory : IHotDrinkFactory
+    {
+        public IHotDrink Prepare(int amount)
+        {
+            WriteLine($"Ready {amount} ml cup of coffee");
+            return new Coffee();
+        }
+    }
+
+    public class HotDrinkMachine
+    {
+        public enum AvailableDrink
+        {
+            Coffee, Tea
         }
 
-        public override string ToString()
+        private Dictionary<AvailableDrink, IHotDrinkFactory> _factories =
+            new Dictionary<AvailableDrink, IHotDrinkFactory>();
+
+        public HotDrinkMachine()
         {
-            return $"{nameof(_x)}: {_x}, {nameof(_y)} {_y}";
+            foreach (AvailableDrink drink in Enum.GetValues(typeof(AvailableDrink)))
+            {
+                var factory = (IHotDrinkFactory)Activator.CreateInstance(
+                    Type.GetType("DesignPatterns." + Enum.GetName(typeof(AvailableDrink), drink) + "Factory")
+                );
+                _factories.Add(drink, factory);
+            }
         }
 
-        public static class Factory
+        public IHotDrink MakeDrink(AvailableDrink drink, int amount)
         {
-            public static Point NewCarteshianPoint(double x, double y)
-            {
-                return new Point(x, y);
-            }
-
-            public static Point NewPolarPoint(double rho, double theta)
-            {
-                return new Point(rho * Math.Cos(theta), rho * Math.Sin(theta));
-            }
+            return _factories[drink].Prepare(amount);
         }
     }
 
@@ -45,11 +84,9 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            var point = Point.Factory.NewPolarPoint(1.0, Math.PI / 2);
-            WriteLine(point);
-
-            var origin = Point.Origin;
-            WriteLine(origin);
+            var machine = new HotDrinkMachine();
+            var drink = machine.MakeDrink(HotDrinkMachine.AvailableDrink.Tea, 220);
+            drink.Consume();
         }
     }
 }
