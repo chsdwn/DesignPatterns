@@ -11,33 +11,82 @@ namespace DesignPatterns
 {
     public class Person
     {
-        public string Name, Position;
+        public string StreetAddress, Postcode, City;
+        public string CompanyName, Position;
+        public int AnnualIncome;
+
+        public override string ToString()
+        {
+            return $"{nameof(StreetAddress)}: {StreetAddress}, "
+                + $"{nameof(Postcode)}: {Postcode}, {nameof(City)}: {City}, "
+                + $"{nameof(CompanyName)}: {CompanyName}, {nameof(Position)}: {Position}, "
+                + $"{nameof(AnnualIncome)}: {AnnualIncome}";
+        }
     }
 
-    public class PersonBuilder
+    public class PersonBuilder // facade
     {
-        public readonly List<Action<Person>> Actions = new List<Action<Person>>();
+        // reference
+        protected Person _person = new Person();
 
-        public PersonBuilder Called(string name)
+        public PersonJobBuilder Works => new PersonJobBuilder(_person);
+        public PersonAddressBuilder Lives => new PersonAddressBuilder(_person);
+
+        public static implicit operator Person(PersonBuilder personBuilder)
         {
-            Actions.Add(p => p.Name = name);
+            return personBuilder._person;
+        }
+    }
+
+    public class PersonJobBuilder : PersonBuilder
+    {
+        public PersonJobBuilder(Person person)
+        {
+            _person = person;
+        }
+
+        public PersonJobBuilder At(string companyName)
+        {
+            _person.CompanyName = companyName;
             return this;
         }
 
-        public Person Build()
+        public PersonJobBuilder AsA(string position)
         {
-            var person = new Person();
-            Actions.ForEach(a => a(person));
-            return person;
+            _person.Position = position;
+            return this;
+        }
+
+        public PersonJobBuilder Earning(int amount)
+        {
+            _person.AnnualIncome = amount;
+            return this;
         }
     }
 
-    public static class PersonBuilderExtensions
+    public class PersonAddressBuilder : PersonBuilder
     {
-        public static PersonBuilder WorksAsA(this PersonBuilder builder, string position)
+        public PersonAddressBuilder(Person person)
         {
-            builder.Actions.Add(p => p.Position = position);
-            return builder;
+            _person = person;
+        }
+
+        public PersonAddressBuilder At(string streetAddress)
+        {
+            _person.StreetAddress = streetAddress;
+            return this;
+        }
+
+        public PersonAddressBuilder WithPostcode(string postcode)
+        {
+            _person.Postcode = postcode;
+            return this;
+        }
+
+        public PersonAddressBuilder In(string city)
+        {
+            _person.City = city;
+            return this;
         }
     }
 
@@ -46,10 +95,15 @@ namespace DesignPatterns
         static void Main(string[] args)
         {
             var personBuilder = new PersonBuilder();
-            var person = personBuilder
-                .Called("Hulusi")
-                .WorksAsA("Developer")
-                .Build();
+            Person person = personBuilder
+                .Works
+                    .At("Company")
+                    .AsA("Developer")
+                    .Earning(1000)
+                .Lives
+                    .At("A Street")
+                    .WithPostcode("1")
+                    .In("B City");
             WriteLine(person);
         }
     }
