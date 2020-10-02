@@ -11,47 +11,33 @@ namespace DesignPatterns
 {
     public class Person
     {
-        public string Name;
-        public string Position;
-
-        public class Builder : PersonJobBuilder<Builder>
-        {
-        }
-
-        public static Builder New => new Builder();
-
-        public override string ToString()
-        {
-            return $"{nameof(Name)}: {Name}, {nameof(Position)}: {Position}";
-        }
+        public string Name, Position;
     }
 
-    public abstract class PersonBuilder
+    public class PersonBuilder
     {
-        protected Person _person = new Person();
+        public readonly List<Action<Person>> Actions = new List<Action<Person>>();
 
-        public Person Build() => _person;
-    }
-
-    public class PersonInfoBuilder<SELF>
-        : PersonBuilder
-        where SELF : PersonInfoBuilder<SELF>
-    {
-        public SELF Called(string name)
+        public PersonBuilder Called(string name)
         {
-            _person.Name = name;
-            return (SELF)this;
+            Actions.Add(p => p.Name = name);
+            return this;
+        }
+
+        public Person Build()
+        {
+            var person = new Person();
+            Actions.ForEach(a => a(person));
+            return person;
         }
     }
 
-    public class PersonJobBuilder<SELF>
-        : PersonInfoBuilder<PersonJobBuilder<SELF>>
-        where SELF : PersonJobBuilder<SELF>
+    public static class PersonBuilderExtensions
     {
-        public SELF WorksAsA(string position)
+        public static PersonBuilder WorksAsA(this PersonBuilder builder, string position)
         {
-            _person.Position = position;
-            return (SELF)this;
+            builder.Actions.Add(p => p.Position = position);
+            return builder;
         }
     }
 
@@ -59,7 +45,8 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            var person = Person.New
+            var personBuilder = new PersonBuilder();
+            var person = personBuilder
                 .Called("Hulusi")
                 .WorksAsA("Developer")
                 .Build();
