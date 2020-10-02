@@ -9,7 +9,7 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Person : ICloneable
+    public class Person
     {
         public string[] Names;
         public Address Address;
@@ -20,15 +20,15 @@ namespace DesignPatterns
             Address = address;
         }
 
-        public object Clone()
+        public Person(Person other)
         {
-            // shallow copy
-            return new Person(Names, Address.Clone() as Address);
+            Names = other.Names;
+            Address = new Address(other.Address);
         }
 
         public override string ToString()
         {
-            return $"{nameof(Names)}: {string.Join(", ", Names)}, {nameof(Address)}: {Address}";
+            return $"{nameof(Names)}: {string.Join(" ", Names)}, {nameof(Address)}: {Address}";
         }
     }
 
@@ -43,9 +43,10 @@ namespace DesignPatterns
             HouseNumber = houseNumber;
         }
 
-        public object Clone()
+        public Address(Address other)
         {
-            return new Address(StreetName, HouseNumber);
+            StreetName = other.StreetName;
+            HouseNumber = other.HouseNumber;
         }
 
         public override string ToString()
@@ -59,8 +60,9 @@ namespace DesignPatterns
         static void Main(string[] args)
         {
             var ali = new Person(new[] { "Ali", "Veli" }, new Address("A Street", 100));
-            var ayse = ali.Clone() as Person;
+            var ayse = new Person(ali);
             ayse.Names[0] = "Ayse";
+            ayse.Address.HouseNumber = 200;
 
             WriteLine(ali);
             WriteLine(ayse);
