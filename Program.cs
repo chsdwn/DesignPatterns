@@ -9,102 +9,48 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Person
+    public enum CoordinateSystem
     {
-        public string StreetAddress, Postcode, City;
-        public string CompanyName, Position;
-        public int AnnualIncome;
-
-        public override string ToString()
-        {
-            return $"{nameof(StreetAddress)}: {StreetAddress}, "
-                + $"{nameof(Postcode)}: {Postcode}, {nameof(City)}: {City}, "
-                + $"{nameof(CompanyName)}: {CompanyName}, {nameof(Position)}: {Position}, "
-                + $"{nameof(AnnualIncome)}: {AnnualIncome}";
-        }
+        Cartesian,
+        Polar
     }
 
-    public class PersonBuilder // facade
+    public class Point
     {
-        // reference
-        protected Person _person = new Person();
+        private double _x, _y;
 
-        public PersonJobBuilder Works => new PersonJobBuilder(_person);
-        public PersonAddressBuilder Lives => new PersonAddressBuilder(_person);
-
-        public static implicit operator Person(PersonBuilder personBuilder)
+        /// <summary>
+        /// Initializes a point from EITHER cartesian or polar
+        /// </summary>
+        /// <param name="a">x if cartesian, rho if polar</param>
+        /// <param name="b"></param>
+        /// <param name="coordinateSystem"></param>
+        public Point(double a, double b, CoordinateSystem coordinateSystem = CoordinateSystem.Cartesian)
         {
-            return personBuilder._person;
-        }
-    }
-
-    public class PersonJobBuilder : PersonBuilder
-    {
-        public PersonJobBuilder(Person person)
-        {
-            _person = person;
-        }
-
-        public PersonJobBuilder At(string companyName)
-        {
-            _person.CompanyName = companyName;
-            return this;
+            switch (coordinateSystem)
+            {
+                case CoordinateSystem.Cartesian:
+                    _x = a;
+                    _y = b;
+                    break;
+                case CoordinateSystem.Polar:
+                    _x = a * Math.Cos(b);
+                    _y = a * Math.Sin(b);
+                    break;
+            }
         }
 
-        public PersonJobBuilder AsA(string position)
-        {
-            _person.Position = position;
-            return this;
-        }
-
-        public PersonJobBuilder Earning(int amount)
-        {
-            _person.AnnualIncome = amount;
-            return this;
-        }
-    }
-
-    public class PersonAddressBuilder : PersonBuilder
-    {
-        public PersonAddressBuilder(Person person)
-        {
-            _person = person;
-        }
-
-        public PersonAddressBuilder At(string streetAddress)
-        {
-            _person.StreetAddress = streetAddress;
-            return this;
-        }
-
-        public PersonAddressBuilder WithPostcode(string postcode)
-        {
-            _person.Postcode = postcode;
-            return this;
-        }
-
-        public PersonAddressBuilder In(string city)
-        {
-            _person.City = city;
-            return this;
-        }
+        // public Point(double rho, double theta)
+        // {
+        //     _x = rho;
+        //     _y = theta;
+        // }
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
-            var personBuilder = new PersonBuilder();
-            Person person = personBuilder
-                .Works
-                    .At("Company")
-                    .AsA("Developer")
-                    .Earning(1000)
-                .Lives
-                    .At("A Street")
-                    .WithPostcode("1")
-                    .In("B City");
-            WriteLine(person);
         }
     }
 }
