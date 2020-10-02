@@ -62,10 +62,11 @@ namespace DesignPatterns
             root.Name = rootName;
         }
 
-        public void AddChild(string childName, string childText)
+        public HtmlBuilder AddChild(string childName, string childText)
         {
             var element = new HtmlElement(childName, childText);
             root.Elements.Add(element);
+            return this;
         }
 
         public override string ToString()
@@ -99,8 +100,9 @@ namespace DesignPatterns
             WriteLine(stringBuilder);
 
             var htmlBuilder = new HtmlBuilder("ul");
-            htmlBuilder.AddChild("li", "hello");
-            htmlBuilder.AddChild("li", "world");
+            htmlBuilder
+                .AddChild("li", "hello")
+                .AddChild("li", "world");
             WriteLine(htmlBuilder.ToString());
         }
     }
