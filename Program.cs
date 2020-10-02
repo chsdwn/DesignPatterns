@@ -9,7 +9,12 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Person
+    public interface IPrototype<T>
+    {
+        T DeepCopy();
+    }
+
+    public class Person : IPrototype<Person>
     {
         public string[] Names;
         public Address Address;
@@ -20,10 +25,9 @@ namespace DesignPatterns
             Address = address;
         }
 
-        public Person(Person other)
+        public Person DeepCopy()
         {
-            Names = other.Names;
-            Address = new Address(other.Address);
+            return new Person(Names, Address.DeepCopy());
         }
 
         public override string ToString()
@@ -32,7 +36,7 @@ namespace DesignPatterns
         }
     }
 
-    public class Address
+    public class Address : IPrototype<Address>
     {
         public string StreetName;
         public int HouseNumber;
@@ -43,10 +47,9 @@ namespace DesignPatterns
             HouseNumber = houseNumber;
         }
 
-        public Address(Address other)
+        public Address DeepCopy()
         {
-            StreetName = other.StreetName;
-            HouseNumber = other.HouseNumber;
+            return new Address(StreetName, HouseNumber);
         }
 
         public override string ToString()
@@ -60,8 +63,8 @@ namespace DesignPatterns
         static void Main(string[] args)
         {
             var ali = new Person(new[] { "Ali", "Veli" }, new Address("A Street", 100));
-            var ayse = new Person(ali);
-            ayse.Names[0] = "Ayse";
+            var ayse = ali.DeepCopy();
+            ayse.Names = new[] { "Ayse", "Fatma" };
             ayse.Address.HouseNumber = 200;
 
             WriteLine(ali);
