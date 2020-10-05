@@ -14,157 +14,142 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class Point
+    public interface IInteger
     {
-        public int X, Y;
+        int Value { get; }
+    }
 
-        public Point(int x, int y)
+    public static class Dimensions
+    {
+        public class Two : IInteger
         {
-            X = x;
-            Y = y;
+            public int Value => 2;
         }
 
-        protected bool Equals(Point other)
+        public class Three : IInteger
         {
-            return X == other.X && Y == other.Y;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Point)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (X * 397) ^ Y;
-            }
+            public int Value => 3;
         }
     }
 
-    public class Line
+    public class Vector<TSelf, T, D>
+        where TSelf : Vector<TSelf, T, D>, new()
+        where D : IInteger, new()
     {
-        public Point Start, End;
+        protected T[] _data;
 
-        public Line(Point start, Point end)
+        public Vector()
         {
-            Start = start;
-            End = end;
+            // complains without new()
+            _data = new T[new D().Value];
         }
 
-        protected bool Equals(Line other)
+        public Vector(params T[] values)
         {
-            return Equals(Start, other.Start) && Equals(End, other.End);
+            var requiredSize = new D().Value;
+            _data = new T[requiredSize];
+
+            var providedSize = values.Length;
+
+            for (int i = 0; i < Math.Min(requiredSize, providedSize); i++)
+                _data[i] = values[i];
         }
 
-        public override bool Equals(object obj)
+        public static TSelf Create(params T[] values)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Line)obj);
+            var result = new TSelf();
+            var requiredSize = new D().Value;
+            result._data = new T[requiredSize];
+
+            var providedSize = values.Length;
+
+            for (int i = 0; i < Math.Min(requiredSize, providedSize); i++)
+                result._data[i] = values[i];
+
+            return result;
         }
 
-        public override int GetHashCode()
+        public T this[int index]
         {
-            unchecked
-            {
-                return ((Start != null ? Start.GetHashCode() : 0) * 397) ^ ((End != null ? End.GetHashCode() : 0) * 397);
-            }
+            get => _data[index];
+            set => _data[index] = value;
+        }
+
+        public T X
+        {
+            get => _data[0];
+            set => _data[0] = value;
         }
     }
 
-    public class VectorObject : Collection<Line>
+    public class VectorOfInt<D> : Vector<VectorOfInt<D>, int, D>
+        where D : IInteger, new()
     {
+        public VectorOfInt()
+        {
+        }
+
+        public VectorOfInt(params int[] values) : base(values)
+        {
+        }
+
+        public static VectorOfInt<D> operator +
+            (VectorOfInt<D> lhs, VectorOfInt<D> rhs)
+        {
+            var result = new VectorOfInt<D>();
+            var dim = new D().Value;
+            for (int i = 0; i < dim; i++)
+                result[i] = lhs[i] + rhs[i];
+
+            return result;
+        }
     }
 
-    public class VectorRectangle : VectorObject
+    public class VectorOfFloat<D> : Vector<VectorOfFloat<D>, float, D>
+       where D : IInteger, new()
     {
-        public VectorRectangle(int x, int y, int width, int height)
+        public VectorOfFloat()
         {
-            Add(new Line(new Point(x, y), new Point(x + width, y)));
-            Add(new Line(new Point(x + width, y), new Point(x + width, y + height)));
-            Add(new Line(new Point(x, y), new Point(x, y + height)));
-            Add(new Line(new Point(x, y + height), new Point(x + width, y + height)));
+        }
+
+        public VectorOfFloat(params float[] values) : base(values)
+        {
         }
     }
 
-    public class LineToPointAdapter : IEnumerable<Point>
+    public class Vector2i : VectorOfInt<Dimensions.Two>
     {
-        private static int _count;
-        private static Dictionary<int, List<Point>> _cache = new Dictionary<int, List<Point>>();
-
-        public LineToPointAdapter(Line line)
+        public Vector2i()
         {
-            var hash = line.GetHashCode();
-            if (_cache.ContainsKey(hash)) return;
-
-            WriteLine($"{++_count}: Generation points for line[{line.Start.X}, {line.Start.Y}]-[{line.End.X}, {line.End.Y}]");
-
-            var points = new List<Point>();
-
-            int left = Math.Min(line.Start.X, line.End.X);
-            int right = Math.Max(line.Start.X, line.End.X);
-            int top = Math.Min(line.Start.Y, line.Start.X);
-            int bottom = Math.Max(line.Start.Y, line.Start.X);
-            int dx = right - left;
-            int dy = line.End.Y - line.Start.Y;
-
-            if (dx == 0)
-                for (int y = top; y <= bottom; ++y)
-                    points.Add(new Point(left, y));
-            else if (dy == 0)
-                for (int x = 0; x <= right; x++)
-                    points.Add(new Point(x, top));
-
-            _cache.Add(hash, points);
         }
 
-        public IEnumerator<Point> GetEnumerator()
+        public Vector2i(params int[] values) : base(values)
         {
-            return _cache.Values.SelectMany(x => x).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
         }
     }
+
+    public class Vector3f : VectorOfFloat<Dimensions.Three>
+    {
+        public override string ToString()
+        {
+            return $"{string.Join(", ", _data)}";
+        }
+    }
+
+    // cannot work
+    // public class Vector2f : Vector<float, 2> {}
 
     public class Program
     {
-        private static readonly List<VectorObject> _vectorObjects =
-            new List<VectorObject>
-            {
-                new VectorRectangle(1,1,10,10),
-                new VectorRectangle(3,3,6,6)
-            };
-
-        public static void DrawPoint(Point point)
-        {
-            Write('.');
-        }
-
         static void Main(string[] args)
         {
-            Draw();
-            Draw();
-        }
+            var vector = new Vector2i(1, 2);
+            vector[0] = 0;
 
-        private static void Draw()
-        {
-            foreach (var vectorObject in _vectorObjects)
-            {
-                foreach (var line in vectorObject)
-                {
-                    var adapter = new LineToPointAdapter(line);
-                    adapter.ForEach(DrawPoint);
-                }
-            }
+            var vector2 = new Vector2i(3, 2);
+            var result = vector + vector2;
+
+            var vector3 = Vector3f.Create(3.5f, 2.2f, 1f);
         }
     }
 }
