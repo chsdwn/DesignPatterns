@@ -9,147 +9,96 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
+using Autofac;
 using MoreLinq;
 using static System.Console;
 
 namespace DesignPatterns
 {
-    public interface IInteger
+    public interface IRenderer
     {
-        int Value { get; }
+        void RenderCircle(float radius);
     }
 
-    public static class Dimensions
+    public class VectorRenderer : IRenderer
     {
-        public class Two : IInteger
+        public void RenderCircle(float radius)
         {
-            public int Value => 2;
-        }
-
-        public class Three : IInteger
-        {
-            public int Value => 3;
+            WriteLine($"{radius}r circle, vector");
         }
     }
 
-    public class Vector<TSelf, T, D>
-        where TSelf : Vector<TSelf, T, D>, new()
-        where D : IInteger, new()
+    public class RasterRenderer : IRenderer
     {
-        protected T[] _data;
-
-        public Vector()
+        public void RenderCircle(float radius)
         {
-            // complains without new()
-            _data = new T[new D().Value];
+            WriteLine($"{radius}r circle, raster");
         }
 
-        public Vector(params T[] values)
-        {
-            var requiredSize = new D().Value;
-            _data = new T[requiredSize];
-
-            var providedSize = values.Length;
-
-            for (int i = 0; i < Math.Min(requiredSize, providedSize); i++)
-                _data[i] = values[i];
-        }
-
-        public static TSelf Create(params T[] values)
-        {
-            var result = new TSelf();
-            var requiredSize = new D().Value;
-            result._data = new T[requiredSize];
-
-            var providedSize = values.Length;
-
-            for (int i = 0; i < Math.Min(requiredSize, providedSize); i++)
-                result._data[i] = values[i];
-
-            return result;
-        }
-
-        public T this[int index]
-        {
-            get => _data[index];
-            set => _data[index] = value;
-        }
-
-        public T X
-        {
-            get => _data[0];
-            set => _data[0] = value;
-        }
     }
 
-    public class VectorOfInt<D> : Vector<VectorOfInt<D>, int, D>
-        where D : IInteger, new()
+    public abstract class Shape
     {
-        public VectorOfInt()
+        protected IRenderer _renderer;
+
+        protected Shape(IRenderer renderer)
         {
+            _renderer = renderer;
         }
 
-        public VectorOfInt(params int[] values) : base(values)
-        {
-        }
-
-        public static VectorOfInt<D> operator +
-            (VectorOfInt<D> lhs, VectorOfInt<D> rhs)
-        {
-            var result = new VectorOfInt<D>();
-            var dim = new D().Value;
-            for (int i = 0; i < dim; i++)
-                result[i] = lhs[i] + rhs[i];
-
-            return result;
-        }
+        public abstract void Draw();
+        public abstract void Resize(float factor);
     }
 
-    public class VectorOfFloat<D> : Vector<VectorOfFloat<D>, float, D>
-       where D : IInteger, new()
+    public class Circle : Shape
     {
-        public VectorOfFloat()
+        private float _radius;
+
+        public Circle(IRenderer renderer, float radius) : base(renderer)
         {
+            _radius = radius;
         }
 
-        public VectorOfFloat(params float[] values) : base(values)
+        public override void Draw()
         {
+            _renderer.RenderCircle(_radius);
+        }
+
+        public override void Resize(float factor)
+        {
+            _radius *= factor;
         }
     }
-
-    public class Vector2i : VectorOfInt<Dimensions.Two>
-    {
-        public Vector2i()
-        {
-        }
-
-        public Vector2i(params int[] values) : base(values)
-        {
-        }
-    }
-
-    public class Vector3f : VectorOfFloat<Dimensions.Three>
-    {
-        public override string ToString()
-        {
-            return $"{string.Join(", ", _data)}";
-        }
-    }
-
-    // cannot work
-    // public class Vector2f : Vector<float, 2> {}
 
     public class Program
     {
         static void Main(string[] args)
         {
-            var vector = new Vector2i(1, 2);
-            vector[0] = 0;
+            /* --- WITHOUT DEPENDENCY INJECTION --- */
+            // var renderer = new RasterRenderer();
+            // var renderer = new VectorRenderer();
+            // var circle = new Circle(renderer, 5);
+            // circle.Draw();
+            // circle.Resize(2);
+            // circle.Draw();
 
-            var vector2 = new Vector2i(3, 2);
-            var result = vector + vector2;
-
-            var vector3 = Vector3f.Create(3.5f, 2.2f, 1f);
+            /* --- DEPENDENCY INJECTION --- */
+            var cb = new ContainerBuilder();
+            // when anytime injects IRenderer returns VectorRenderer as singleton
+            cb.RegisterType<VectorRenderer>().As<IRenderer>().SingleInstance();
+            cb.Register((componentContext, parameters) =>
+                new Circle(componentContext.Resolve<IRenderer>(),
+                    parameters.Positional<float>(0))
+            );
+            using (var container = cb.Build())
+            {
+                var circle = container.Resolve<Circle>(
+                    new PositionalParameter(0, 5f)
+                );
+                circle.Draw();
+                circle.Resize(2f);
+                circle.Draw();
+            }
         }
     }
 }
