@@ -54,6 +54,35 @@ namespace DesignPatterns
         public static SingletonDatabase Instance => _instance.Value;
     }
 
+    public class OrdinaryDatabase : IDatabase
+    {
+        private Dictionary<string, int> _capitals;
+
+        public OrdinaryDatabase()
+        {
+            WriteLine("Initializing database...");
+
+            _capitals = new Dictionary<string, int>
+            {
+                { "Tokyo", 33200000 },
+                { "New York", 17800000 },
+                { "Sao Paulo", 17700000 },
+                { "Seoul", 17500000 },
+                { "Mexico City", 17400000 },
+                { "Osaka", 16425000 },
+                { "Manila", 14750000 },
+                { "Mumbai", 14350000 },
+                { "Delhi", 14300000 },
+                { "Jakarta", 14250000 }
+            };
+        }
+
+        public int GetPopulation(string name)
+        {
+            return _capitals[name];
+        }
+    }
+
     public class SingletonRecordFinder
     {
         public int GetTotalPopulation(IEnumerable<string> names)
@@ -63,6 +92,38 @@ namespace DesignPatterns
                 result += SingletonDatabase.Instance.GetPopulation(name);
 
             return result;
+        }
+    }
+
+    public class ConfigurableRecordFinder
+    {
+        private IDatabase _database;
+
+        public ConfigurableRecordFinder(IDatabase database)
+        {
+            _database = database;
+        }
+
+        public int GetTotalPopulation(IEnumerable<string> names)
+        {
+            int result = 0;
+            foreach (var name in names)
+                result += _database.GetPopulation(name);
+
+            return result;
+        }
+    }
+
+    public class DummyDatabase : IDatabase
+    {
+        public int GetPopulation(string name)
+        {
+            return new Dictionary<string, int>
+            {
+                ["alpha"] = 1,
+                ["beta"] = 2,
+                ["gamma"] = 3
+            }[name];
         }
     }
 
