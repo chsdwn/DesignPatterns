@@ -12,118 +12,26 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public interface IDatabase
+    public class CEO
     {
-        int GetPopulation(string name);
-    }
+        private static string _name;
+        private static int _age;
 
-    public class SingletonDatabase : IDatabase
-    {
-        private Dictionary<string, int> _capitals;
-        private static int _instanceCount;
-        public static int Count => _instanceCount;
-
-        private SingletonDatabase()
+        public string Name
         {
-            ++_instanceCount;
-            WriteLine("Initializing database...");
-
-            _capitals = new Dictionary<string, int>
-            {
-                { "Tokyo", 33200000 },
-                { "New York", 17800000 },
-                { "Sao Paulo", 17700000 },
-                { "Seoul", 17500000 },
-                { "Mexico City", 17400000 },
-                { "Osaka", 16425000 },
-                { "Manila", 14750000 },
-                { "Mumbai", 14350000 },
-                { "Delhi", 14300000 },
-                { "Jakarta", 14250000 }
-            };
+            get => _name;
+            set => _name = value;
         }
 
-        public int GetPopulation(string name)
+        public int Age
         {
-            return _capitals[name];
+            get => _age;
+            set => _age = value;
         }
 
-        private static Lazy<SingletonDatabase> _instance =
-            new Lazy<SingletonDatabase>(() => new SingletonDatabase());
-
-        public static SingletonDatabase Instance => _instance.Value;
-    }
-
-    public class OrdinaryDatabase : IDatabase
-    {
-        private Dictionary<string, int> _capitals;
-
-        public OrdinaryDatabase()
+        public override string ToString()
         {
-            WriteLine("Initializing database...");
-
-            _capitals = new Dictionary<string, int>
-            {
-                { "Tokyo", 33200000 },
-                { "New York", 17800000 },
-                { "Sao Paulo", 17700000 },
-                { "Seoul", 17500000 },
-                { "Mexico City", 17400000 },
-                { "Osaka", 16425000 },
-                { "Manila", 14750000 },
-                { "Mumbai", 14350000 },
-                { "Delhi", 14300000 },
-                { "Jakarta", 14250000 }
-            };
-        }
-
-        public int GetPopulation(string name)
-        {
-            return _capitals[name];
-        }
-    }
-
-    public class SingletonRecordFinder
-    {
-        public int GetTotalPopulation(IEnumerable<string> names)
-        {
-            int result = 0;
-            foreach (var name in names)
-                result += SingletonDatabase.Instance.GetPopulation(name);
-
-            return result;
-        }
-    }
-
-    public class ConfigurableRecordFinder
-    {
-        private IDatabase _database;
-
-        public ConfigurableRecordFinder(IDatabase database)
-        {
-            _database = database;
-        }
-
-        public int GetTotalPopulation(IEnumerable<string> names)
-        {
-            int result = 0;
-            foreach (var name in names)
-                result += _database.GetPopulation(name);
-
-            return result;
-        }
-    }
-
-    public class DummyDatabase : IDatabase
-    {
-        public int GetPopulation(string name)
-        {
-            return new Dictionary<string, int>
-            {
-                ["alpha"] = 1,
-                ["beta"] = 2,
-                ["gamma"] = 3
-            }[name];
+            return $"{nameof(Name)}: {Name}, {nameof(Age)}: {Age}";
         }
     }
 
@@ -131,9 +39,12 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            var db = SingletonDatabase.Instance;
-            var city = "Tokyo";
-            WriteLine($"{city} has population {db.GetPopulation(city)}");
+            var ceo = new CEO();
+            ceo.Name = "Ali Veli";
+            ceo.Age = 25;
+
+            var ceo2 = new CEO();
+            WriteLine(ceo2);
         }
     }
 }
