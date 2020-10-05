@@ -20,17 +20,27 @@ namespace DesignPatterns
     public class SingletonDatabase : IDatabase
     {
         private Dictionary<string, int> _capitals;
+        private static int _instanceCount;
+        public static int Count => _instanceCount;
 
         private SingletonDatabase()
         {
+            ++_instanceCount;
             WriteLine("Initializing database...");
 
-            _capitals = File.ReadAllLines("capitals.txt")
-               .Batch(2)
-               .ToDictionary(
-                   list => list.ElementAt(0).Trim(),
-                   list => int.Parse(list.ElementAt(1))
-               );
+            _capitals = new Dictionary<string, int>
+            {
+                { "Tokyo", 33200000 },
+                { "New York", 17800000 },
+                { "Sao Paulo", 17700000 },
+                { "Seoul", 17500000 },
+                { "Mexico City", 17400000 },
+                { "Osaka", 16425000 },
+                { "Manila", 14750000 },
+                { "Mumbai", 14350000 },
+                { "Delhi", 14300000 },
+                { "Jakarta", 14250000 }
+            };
         }
 
         public int GetPopulation(string name)
@@ -42,6 +52,18 @@ namespace DesignPatterns
             new Lazy<SingletonDatabase>(() => new SingletonDatabase());
 
         public static SingletonDatabase Instance => _instance.Value;
+    }
+
+    public class SingletonRecordFinder
+    {
+        public int GetTotalPopulation(IEnumerable<string> names)
+        {
+            int result = 0;
+            foreach (var name in names)
+                result += SingletonDatabase.Instance.GetPopulation(name);
+
+            return result;
+        }
     }
 
     public class Program
