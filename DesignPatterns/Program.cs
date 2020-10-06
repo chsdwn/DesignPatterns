@@ -15,58 +15,38 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public static class ExtensionMethods
+    public class CodeBuilder
     {
-        public static void ConnectTo(this IEnumerable<Neuron> self, IEnumerable<Neuron> other)
+        private StringBuilder _builder = new StringBuilder();
+
+        public CodeBuilder Clear()
         {
-            if (!ReferenceEquals(self, other)) return;
-
-            foreach (var from in self)
-            {
-                foreach (var to in other)
-                {
-                    from.Out.Add(to);
-                    to.In.Add(from);
-                }
-            }
-        }
-    }
-
-    public class Neuron : IEnumerable<Neuron>
-    {
-        public float Value;
-        public List<Neuron> In, Out;
-
-        public IEnumerator<Neuron> GetEnumerator()
-        {
-            yield return this;
+            _builder.Clear();
+            return this;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public CodeBuilder AppendLine(string? value)
         {
-            return GetEnumerator();
+            _builder.AppendLine(value);
+            return this;
         }
-    }
 
-    public class NeuronLayer : Collection<Neuron>
-    {
-
+        public override string ToString()
+        {
+            return _builder.ToString();
+        }
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
-            var neuron = new Neuron();
-            var neuron2 = new Neuron();
+            var cb = new CodeBuilder();
+            cb.AppendLine("class Foo")
+                .AppendLine("{")
+                .AppendLine("}");
 
-            neuron.ConnectTo(neuron2);
-
-            var layer = new NeuronLayer();
-            var layer2 = new NeuronLayer();
-
-            neuron.ConnectTo(layer);
-            layer.ConnectTo(layer2);
+            WriteLine(cb);
         }
     }
 }
