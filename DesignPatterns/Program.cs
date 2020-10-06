@@ -15,57 +15,58 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class GraphicObject
+    public static class ExtensionMethods
     {
-        public virtual string Name { get; set; } = "Group";
-        public string Color;
-
-        private Lazy<List<GraphicObject>> _children = new Lazy<List<GraphicObject>>();
-        public List<GraphicObject> Children => _children.Value;
-
-        private void Print(StringBuilder stringBuilder, int depth)
+        public static void ConnectTo(this IEnumerable<Neuron> self, IEnumerable<Neuron> other)
         {
-            stringBuilder
-                .Append(new string('*', depth))
-                .Append(string.IsNullOrWhiteSpace(Color) ? string.Empty : $"{Color} ")
-                .AppendLine(Name);
+            if (!ReferenceEquals(self, other)) return;
 
-            foreach (var child in Children)
-                child.Print(stringBuilder, depth + 1);
-        }
-
-        public override string ToString()
-        {
-            var stringBuilder = new StringBuilder();
-            Print(stringBuilder, 0);
-            return stringBuilder.ToString();
+            foreach (var from in self)
+            {
+                foreach (var to in other)
+                {
+                    from.Out.Add(to);
+                    to.In.Add(from);
+                }
+            }
         }
     }
 
-    public class Circle : GraphicObject
+    public class Neuron : IEnumerable<Neuron>
     {
-        public override string Name => "Circle";
+        public float Value;
+        public List<Neuron> In, Out;
+
+        public IEnumerator<Neuron> GetEnumerator()
+        {
+            yield return this;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
-    public class Square : GraphicObject
+    public class NeuronLayer : Collection<Neuron>
     {
-        public override string Name => "Square";
+
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
-            var drawing = new GraphicObject { Name = "Drawing1" };
-            drawing.Children.Add(new Square { Color = "Red" });
-            drawing.Children.Add(new Circle { Color = "Blue" });
+            var neuron = new Neuron();
+            var neuron2 = new Neuron();
 
-            var group = new GraphicObject();
-            group.Children.Add(new Circle { Color = "Green" });
-            group.Children.Add(new Square { Color = "Yello" });
-            drawing.Children.Add(group);
+            neuron.ConnectTo(neuron2);
 
-            WriteLine(drawing);
+            var layer = new NeuronLayer();
+            var layer2 = new NeuronLayer();
+
+            neuron.ConnectTo(layer);
+            layer.ConnectTo(layer2);
         }
     }
 }
