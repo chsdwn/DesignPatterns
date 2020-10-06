@@ -15,74 +15,80 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public interface IBird
+    public interface IShape
     {
-        int Weight { get; set; }
-        void Fly();
+        string AsString { get; }
     }
 
-    public class Bird : IBird
+    public class Circle : IShape
     {
-        public int Weight { get; set; }
+        private float _radius;
 
-        public void Fly()
+        public Circle(float radius)
         {
-            WriteLine($"Soaring in the sky, weight: {Weight}");
+            _radius = radius;
         }
+
+        public void Resize(float factor)
+        {
+            _radius *= factor;
+        }
+
+        public string AsString => $"A circle with radius {_radius}";
     }
 
-    public interface ILizard
+    public class Square : IShape
     {
-        int Weight { get; set; }
-        void Crawl();
+        private float _side;
+
+        public Square(float side)
+        {
+            _side = side;
+        }
+
+        public string AsString => $"A square with side {_side}";
     }
 
-    public class Lizard : ILizard
+    public class ColoredShape : IShape
     {
-        public int Weight { get; set; }
+        private IShape _shape;
+        private string _color;
 
-        public void Crawl()
+        public ColoredShape(IShape shape, string color)
         {
-            WriteLine($"Crawling in the dirt, weight: {Weight}");
+            _shape = shape;
+            _color = color;
         }
+
+        public string AsString => $"{_shape.AsString} has the color {_color}";
     }
 
-    public class Dragon : IBird, ILizard
+    public class TransparentShape : IShape
     {
-        private int _weight;
-        private Bird _bird = new Bird();
-        private Lizard _lizard = new Lizard();
+        private IShape _shape;
+        private float _transparency;
 
-        public int Weight
+        public TransparentShape(IShape shape, float transparency)
         {
-            get { return _weight; }
-            set
-            {
-                _weight = value;
-                _bird.Weight = value;
-                _lizard.Weight = value;
-            }
+            _shape = shape;
+            _transparency = transparency;
         }
 
-        public void Fly()
-        {
-            _bird.Fly();
-        }
-
-        public void Crawl()
-        {
-            _lizard.Crawl();
-        }
+        public string AsString => $"{_shape.AsString} has %{_transparency * 100.0} transparency";
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
-            var dragon = new Dragon();
-            dragon.Weight = 120;
-            dragon.Fly();
-            dragon.Crawl();
+            var square = new Square(1.23f);
+            WriteLine(square.AsString);
+
+            var redSquare = new ColoredShape(square, "Red");
+            WriteLine(redSquare.AsString);
+
+            var transparentSquare = new TransparentShape(square, .5f);
+            WriteLine(transparentSquare.AsString);
         }
     }
 }
