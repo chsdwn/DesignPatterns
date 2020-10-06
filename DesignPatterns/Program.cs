@@ -15,90 +15,57 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public interface IRenderer
+    public class GraphicObject
     {
-        void RenderCircle(float radius);
+        public virtual string Name { get; set; } = "Group";
+        public string Color;
+
+        private Lazy<List<GraphicObject>> _children = new Lazy<List<GraphicObject>>();
+        public List<GraphicObject> Children => _children.Value;
+
+        private void Print(StringBuilder stringBuilder, int depth)
+        {
+            stringBuilder
+                .Append(new string('*', depth))
+                .Append(string.IsNullOrWhiteSpace(Color) ? string.Empty : $"{Color} ")
+                .AppendLine(Name);
+
+            foreach (var child in Children)
+                child.Print(stringBuilder, depth + 1);
+        }
+
+        public override string ToString()
+        {
+            var stringBuilder = new StringBuilder();
+            Print(stringBuilder, 0);
+            return stringBuilder.ToString();
+        }
     }
 
-    public class VectorRenderer : IRenderer
+    public class Circle : GraphicObject
     {
-        public void RenderCircle(float radius)
-        {
-            WriteLine($"{radius}r circle, vector");
-        }
+        public override string Name => "Circle";
     }
 
-    public class RasterRenderer : IRenderer
+    public class Square : GraphicObject
     {
-        public void RenderCircle(float radius)
-        {
-            WriteLine($"{radius}r circle, raster");
-        }
-
-    }
-
-    public abstract class Shape
-    {
-        protected IRenderer _renderer;
-
-        protected Shape(IRenderer renderer)
-        {
-            _renderer = renderer;
-        }
-
-        public abstract void Draw();
-        public abstract void Resize(float factor);
-    }
-
-    public class Circle : Shape
-    {
-        private float _radius;
-
-        public Circle(IRenderer renderer, float radius) : base(renderer)
-        {
-            _radius = radius;
-        }
-
-        public override void Draw()
-        {
-            _renderer.RenderCircle(_radius);
-        }
-
-        public override void Resize(float factor)
-        {
-            _radius *= factor;
-        }
+        public override string Name => "Square";
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
-            /* --- WITHOUT DEPENDENCY INJECTION --- */
-            // var renderer = new RasterRenderer();
-            // var renderer = new VectorRenderer();
-            // var circle = new Circle(renderer, 5);
-            // circle.Draw();
-            // circle.Resize(2);
-            // circle.Draw();
+            var drawing = new GraphicObject { Name = "Drawing1" };
+            drawing.Children.Add(new Square { Color = "Red" });
+            drawing.Children.Add(new Circle { Color = "Blue" });
 
-            /* --- DEPENDENCY INJECTION --- */
-            var cb = new ContainerBuilder();
-            // when anytime injects IRenderer returns VectorRenderer as singleton
-            cb.RegisterType<VectorRenderer>().As<IRenderer>().SingleInstance();
-            cb.Register((componentContext, parameters) =>
-                new Circle(componentContext.Resolve<IRenderer>(),
-                    parameters.Positional<float>(0))
-            );
-            using (var container = cb.Build())
-            {
-                var circle = container.Resolve<Circle>(
-                    new PositionalParameter(0, 5f)
-                );
-                circle.Draw();
-                circle.Resize(2f);
-                circle.Draw();
-            }
+            var group = new GraphicObject();
+            group.Children.Add(new Circle { Color = "Green" });
+            group.Children.Add(new Square { Color = "Yello" });
+            drawing.Children.Add(group);
+
+            WriteLine(drawing);
         }
     }
 }
