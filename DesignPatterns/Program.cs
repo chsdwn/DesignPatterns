@@ -15,14 +15,18 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public interface IShape
+    public abstract class Shape
     {
-        string AsString { get; }
+        public abstract string AsString();
     }
 
-    public class Circle : IShape
+    public class Circle : Shape
     {
         private float _radius;
+
+        public Circle() : this(0)
+        {
+        }
 
         public Circle(float radius)
         {
@@ -34,61 +38,100 @@ namespace DesignPatterns
             _radius *= factor;
         }
 
-        public string AsString => $"A circle with radius {_radius}";
+        public override string AsString() => $"A circle with radius {_radius}";
     }
 
-    public class Square : IShape
+    public class Square : Shape
     {
         private float _side;
+
+        public Square() : this(0)
+        {
+        }
 
         public Square(float side)
         {
             _side = side;
         }
 
-        public string AsString => $"A square with side {_side}";
+        public override string AsString() => $"A square with side {_side}";
     }
 
-    public class ColoredShape : IShape
+    public class ColoredShape : Shape
     {
-        private IShape _shape;
+        private Shape _shape;
         private string _color;
 
-        public ColoredShape(IShape shape, string color)
+        public ColoredShape(Shape shape, string color)
         {
             _shape = shape;
             _color = color;
         }
 
-        public string AsString => $"{_shape.AsString} has the color {_color}";
+        public override string AsString() => $"{_shape.AsString()} has the color {_color}";
     }
 
-    public class TransparentShape : IShape
+    public class TransparentShape : Shape
     {
-        private IShape _shape;
+        private Shape _shape;
         private float _transparency;
 
-        public TransparentShape(IShape shape, float transparency)
+        public TransparentShape(Shape shape, float transparency)
         {
             _shape = shape;
             _transparency = transparency;
         }
 
-        public string AsString => $"{_shape.AsString} has %{_transparency * 100.0} transparency";
+        public override string AsString() => $"{_shape.AsString()} has %{_transparency * 100.0} transparency";
+    }
+
+    public class ColoredShape<T> : Shape
+        where T : Shape, new()
+    {
+        private string _color;
+
+        private T _shape = new T();
+
+        public ColoredShape() : this("black")
+        {
+        }
+
+        public ColoredShape(string color)
+        {
+            _color = color;
+        }
+
+        public override string AsString() => $"{_shape.AsString()} has the color {_color}";
+    }
+
+    public class TransparentShape<T> : Shape
+        where T : Shape, new()
+    {
+        private float _transparency;
+
+        private T _shape = new T();
+
+        public TransparentShape() : this(0)
+        {
+        }
+
+        public TransparentShape(float transparency)
+        {
+            _transparency = transparency;
+        }
+
+        public override string AsString() => $"{_shape.AsString()} has %{_transparency * 100.0f} transparency";
     }
 
     public class Program
     {
         static void Main(string[] args)
         {
-            var square = new Square(1.23f);
-            WriteLine(square.AsString);
+            var redSquare = new ColoredShape<Square>("red");
+            WriteLine(redSquare.AsString());
 
-            var redSquare = new ColoredShape(square, "Red");
-            WriteLine(redSquare.AsString);
-
-            var transparentSquare = new TransparentShape(square, .5f);
-            WriteLine(transparentSquare.AsString);
+            var circle = new TransparentShape<ColoredShape<Circle>>(.4f);
+            WriteLine(circle.AsString());
         }
     }
 }
