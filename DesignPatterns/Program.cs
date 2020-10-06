@@ -15,20 +15,21 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class CodeBuilder
+    public class StringBuilderPlus
     {
         private StringBuilder _builder = new StringBuilder();
 
-        public CodeBuilder Clear()
+        public static implicit operator StringBuilderPlus(string s)
         {
-            _builder.Clear();
-            return this;
+            var stringBuilderPlus = new StringBuilderPlus();
+            stringBuilderPlus._builder.Append(s);
+            return stringBuilderPlus;
         }
 
-        public CodeBuilder AppendLine(string? value)
+        public static StringBuilderPlus operator +(StringBuilderPlus stringBuilderPlus, string s)
         {
-            _builder.AppendLine(value);
-            return this;
+            stringBuilderPlus._builder.Append(s);
+            return stringBuilderPlus;
         }
 
         public override string ToString()
@@ -41,12 +42,9 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            var cb = new CodeBuilder();
-            cb.AppendLine("class Foo")
-                .AppendLine("{")
-                .AppendLine("}");
-
-            WriteLine(cb);
+            StringBuilderPlus message = "hello ";
+            message += "world";
+            WriteLine(message);
         }
     }
 }
