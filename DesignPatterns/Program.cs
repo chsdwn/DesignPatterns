@@ -15,26 +15,63 @@ using static System.Console;
 
 namespace DesignPatterns
 {
-    public class StringBuilderPlus
+    public interface IBird
     {
-        private StringBuilder _builder = new StringBuilder();
+        int Weight { get; set; }
+        void Fly();
+    }
 
-        public static implicit operator StringBuilderPlus(string s)
+    public class Bird : IBird
+    {
+        public int Weight { get; set; }
+
+        public void Fly()
         {
-            var stringBuilderPlus = new StringBuilderPlus();
-            stringBuilderPlus._builder.Append(s);
-            return stringBuilderPlus;
+            WriteLine($"Soaring in the sky, weight: {Weight}");
+        }
+    }
+
+    public interface ILizard
+    {
+        int Weight { get; set; }
+        void Crawl();
+    }
+
+    public class Lizard : ILizard
+    {
+        public int Weight { get; set; }
+
+        public void Crawl()
+        {
+            WriteLine($"Crawling in the dirt, weight: {Weight}");
+        }
+    }
+
+    public class Dragon : IBird, ILizard
+    {
+        private int _weight;
+        private Bird _bird = new Bird();
+        private Lizard _lizard = new Lizard();
+
+        public int Weight
+        {
+            get { return _weight; }
+            set
+            {
+                _weight = value;
+                _bird.Weight = value;
+                _lizard.Weight = value;
+            }
         }
 
-        public static StringBuilderPlus operator +(StringBuilderPlus stringBuilderPlus, string s)
+        public void Fly()
         {
-            stringBuilderPlus._builder.Append(s);
-            return stringBuilderPlus;
+            _bird.Fly();
         }
 
-        public override string ToString()
+        public void Crawl()
         {
-            return _builder.ToString();
+            _lizard.Crawl();
         }
     }
 
@@ -42,9 +79,10 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            StringBuilderPlus message = "hello ";
-            message += "world";
-            WriteLine(message);
+            var dragon = new Dragon();
+            dragon.Weight = 120;
+            dragon.Fly();
+            dragon.Crawl();
         }
     }
 }
